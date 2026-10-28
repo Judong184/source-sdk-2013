@@ -25,10 +25,16 @@ jobs:
           call createallprojects.bat
         shell: cmd
 
+      - name: Find generated solution files (Debug)
+        run: |
+          cd src
+          dir *.sln /s
+        shell: cmd
+
       - name: Build solution (Release)
         run: |
           cd src
-          msbuild games.sln /p:Configuration=Release /p:Platform=Win32 /m
+          msbuild everything.sln /p:Configuration=Release /p:Platform=Win32 /m
         shell: cmd
 
       - name: Upload compiled binaries
