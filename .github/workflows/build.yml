@@ -25,22 +25,42 @@ jobs:
           call createallprojects.bat
         shell: cmd
 
-      - name: Find generated solution files (Debug)
+      - name: Find generated solution files
         run: |
           cd src
           dir *.sln /s
         shell: cmd
 
-      - name: Build solution (Release)
+      - name: Build solution
+        shell: cmd
         run: |
           cd src
-          msbuild everything.sln /p:Configuration=Release /p:Platform=Win32 /m
-        shell: cmd
 
-      - name: Upload compiled binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: source-sdk-binaries-windows
-          path: |
-            src/game/client/Release_*/*.dll
-            src/game/server/Release_*/*.dll
+          for /f "delims=" %%F in ('dir /b /s *.sln 2^>nul') do (
+            set "SOLUTION=%%F"
+            goto :solution_found
+          )
+
+          echo No generated .sln file found in src.
+          exit /b 1
+
+          :solution_found
+          echo Using solution file: %SOLUTION%
+
+          findstr /R /C:"Release.*Win32" "%SOLUTION%" >NUL
+          if not errorlevel 1 (
+            echo Found Release|Win32. Building with Win32 platform.
+            msbuild "%SOLUTION%" /p:Configuration=Release /p:Platform=Win32 /m
+            exit /b %ERRORLEVEL%
+          )
+
+          findstr /R /C:"Release.*x86" "%SOLUTION%" >NUL
+          if not errorlevel 1 (
+            echo Found Release|x86. Building with x86 platform.
+            msbuild "%SOLUTION%" /p:Configuration=Release /p:Platform=x86 /m
+            exit /b %ERRORLEVEL%
+          )
+
+          echo No Release|Win32 or Release|x86 configuration found; falling back to default Release config.
+          msbuild "%SOLUTION%" /p:Configuration=Release /m
+          exit /b %ERRORLEVEL%
