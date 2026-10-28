@@ -16,24 +16,19 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
       - name: Generate project files
         run: |
           cd src
-          python createallprojects.py
+          call createallprojects.bat
         shell: cmd
 
       - name: Build solution (Release)
         run: |
           cd src
-          msbuild everything.sln /p:Configuration=Release /p:Platform=Win32 /m
+          msbuild games.sln /p:Configuration=Release /p:Platform=Win32 /m
         shell: cmd
 
       - name: Upload compiled binaries
